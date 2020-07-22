@@ -1,49 +1,49 @@
 var monthToNumber = {
-   "JANUAR": 1,
-   "FEBRUAR": 2,
-   "MARS": 3,
-   "APRIL": 4,
-   "MAI": 5,
-   "JUNI": 6,
-   "JULI": 7,
-   "AUGUST": 8,
-   "SEPTEMBER": 9,
-   "OKTOBER": 10,
-   "NOVEMBER": 11,
-   "DESEMBER": 12,
+    "JANUAR": 1,
+    "FEBRUAR": 2,
+    "MARS": 3,
+    "APRIL": 4,
+    "MAI": 5,
+    "JUNI": 6,
+    "JULI": 7,
+    "AUGUST": 8,
+    "SEPTEMBER": 9,
+    "OKTOBER": 10,
+    "NOVEMBER": 11,
+    "DESEMBER": 12,
 };
 
 var indexToMonth = {
-   0: "JANUAR",
-   1: "FEBRUAR",
-   2: "MARS",
-   3: "APRIL",
-   4: "MAI",
-   5: "JUNI",
-   6: "JULI",
-   7: "AUGUST",
-   8: "SEPTEMBER",
-   9: "OKTOBER",
-   10: "NOVEMBER",
-   11: "DESEMBER",
+    0: "JANUAR",
+    1: "FEBRUAR",
+    2: "MARS",
+    3: "APRIL",
+    4: "MAI",
+    5: "JUNI",
+    6: "JULI",
+    7: "AUGUST",
+    8: "SEPTEMBER",
+    9: "OKTOBER",
+    10: "NOVEMBER",
+    11: "DESEMBER",
 };
 
 var ukedager = {
-   1: "Man",
-   2: "Tirs",
-   3: "Ons",
-   4: "Tors",
-   5: "Fre",
-   6: "Lør",
-   0: "Søn",
+    1: "Man",
+    2: "Tirs",
+    3: "Ons",
+    4: "Tors",
+    5: "Fre",
+    6: "Lør",
+    0: "Søn",
 };
 
 // [lyseste, middels, mørkeste]
 var farger = [
-   ["#d9ead3", "#b6d7a8", "#93c47d"], 
-   ["#cfe2f3", "#9fc5e8", "#6fa8dc"], 
-   ["#d5a6bd", "#c27ba0", "#a64d79"], 
-   ["#ea9999", "#e06666", "#cc0000"] ];
+    ["#d9ead3", "#b6d7a8", "#93c47d"], 
+    ["#cfe2f3", "#9fc5e8", "#6fa8dc"], 
+    ["#d5a6bd", "#c27ba0", "#a64d79"], 
+    ["#ea9999", "#e06666", "#cc0000"] ];
 
 var ss = SpreadsheetApp.getActiveSpreadsheet();
 var sheets = ss.getSheets();
