@@ -1,23 +1,41 @@
 function onOpen() {
-    sjekkOmNy();
+    checkHippoLink();
     sjekkHippo();
     ui.createMenu('Egendefinert')
-        .addItem('Oppdater arrangementsliste fra Hippo', 'sjekkHippo')
-        .addItem('Sett opp som nytt rapporteringsdokument', 'slettGammelInfo')
-        .addToUi();
+    .addItem('Oppdater arrangementsliste fra Hippo', 'sjekkHippo')
+    .addItem('Sett opp som nytt rapporteringsdokument', 'clearSheet')
+    .addToUi();
 }
 
-function slettGammelInfo() {
-    slettAlt();
+function clearSheet() {
+    var result = ui.alert(
+        'Bekreft',
+        'Er du sikker på at du vil slette alle arrangementer (inkludert ark)?',
+        ui.ButtonSet.YES_NO);
+
+    // Process the user's response.
+    if (result == ui.Button.YES) {
+        var sisteRad = FIRST_RAP_ROW;
+
+        //Slett alle referanser til slettede ark, og slett arkene
+        hovedark.getRange(FIRST_RAP_ROW, 3, (LAST_RAP_ROW - sisteRad + 1), 9).clearContent();
+        deleteSheets(true);
+
+    } else {
+        ui.alert('Sletting avbrutt');
+        return;
+    }
+
+    ui.alert('Alt innhold slettet');
     hippo.clearContents();
-    sjekkOmNy();
+    checkHippoLink();
     ui.alert("Lenke til ny hippo lagt til! Henter arrangementer...");
     sjekkHippo();
-    ui.alert("Alle arrangeventer lagt til.");
+    ui.alert("Alle arrangementer lagt til.");
 }
 
 
-function sjekkOmNy() {
+function checkHippoLink() {
     if (hippo.getRange(1, 1).getFormula() != "") {
         return;
     }
@@ -42,41 +60,18 @@ function fiksAlleLenker() {
 }
 
 
-function slettAlt() {
+function deleteSheets(blockPrompt) {
     var ui = SpreadsheetApp.getUi();
-    var result = ui.alert(
-            'Bekreft',
-            'Er du sikker på at du vil slette alle arrangementer (inkludert ark)?',
+    var result;
+
+    if (!blockPrompt) {
+        var result = ui.alert(
+        'Bekreft',
+        'Er du sikker på at du vil slette alle arrangementsark',
             ui.ButtonSet.YES_NO);
-
-    // Process the user's response.
-    if (result == ui.Button.YES) {
-        var sisteRad = FIRST_RAP_ROW;
-
-        //Slett alle referanser til slettede ark, og slett arkene
-        hovedark.getRange(FIRST_RAP_ROW, 3, (LAST_RAP_ROW - sisteRad + 1), 9).clearContent();
-        slettAlleArk();
-
-    } else {
-        ui.alert('Sletting avbrutt');
-        return;
     }
-
-    SpreadsheetApp.getUi().alert('Alt innhold slettet');
-}
-
-
-
-function slettAlleArk() {
-
-    var ui = SpreadsheetApp.getUi();
-    var result = ui.alert(
-            'Bekreft',
-            'Er du sikker på at du vil slette alle ark?',
-            ui.ButtonSet.YES_NO);
-
     // Process the user's response.
-    if (result == ui.Button.YES) {
+    if ((result == ui.Button.YES) || (blockPrompt)) {
         var sisteRad = FIRST_RAP_ROW;
 
         if (sheets.length > 3) {
@@ -94,7 +89,9 @@ function slettAlleArk() {
         return;
     }
 
-    SpreadsheetApp.getUi().alert('Alle ark slettet');
+    if (!blockPrompt) {
+        SpreadsheetApp.getUi().alert('Alle ark slettet');
+    }
 }
 
 
@@ -105,22 +102,21 @@ function sjekkHippo() {
 
     var startRow = 4;
     var rapRow = startRow;
-    var prevCell = hovedark.getRange((rapRow - 1), 4);
+    var prevCell = hovedark.getRange((rapRow) - 1, 4);
     var thisCell, thisDate;
 
     var funnet;
     var lastHipRow = hippo.getRange("E1").getDisplayValue();
-    var hipRow = 1;
+    var hipRow = 2;
     var arrNavn = hippo.getRange(hipRow, 2);
     var arrDato = hippo.getRange(hipRow, 1);
-
+  
     while ((prevCell.getDisplayValue() != "") && (rapRow <= LAST_RAP_ROW) && (hipRow <= lastHipRow)) {
         thisCell = hovedark.getRange(rapRow, ARR_COL);
         thisDate = hovedark.getRange(rapRow, DATE_COL);
         funnet = false;
 
         while (!funnet && (hipRow <= lastHipRow)) {
-
             if (!arrDato.isBlank() && !arrNavn.isBlank()) {
                 funnet = true;
             }
