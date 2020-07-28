@@ -1,12 +1,11 @@
 function onOpen() {
     hltCrMnth();
-    ui.createMenu('Egendefinert')
-        .addItem('Lag ark for alle arrangmenter', 'fiksAlleLenker')
+    ui.createMenu('KU Supermeny')
+        .addItem('Sjekk ark alle arrangmentslenker', 'fiksAlleLenker')
         .addItem('Nytt arr på samme dato', 'delDato')
         .addItem('Gå til i dag', 'hltCrMnth')
         .addItem('Lag nytt hovedark', 'lagHippo')
         .addItem('Slå sammen arrangementer', 'mergeArrs')
-        .addItem('Slett alle ark', 'slettAlleArk')
         .addItem('Løs opp sammenslåing', 'løsOppMerge')
         .addToUi();
 }
@@ -17,7 +16,7 @@ function hltCrMnth() {
     const THIS_MONTH = TODAY.getMonth();
     const THIS_DATE = TODAY.getDate();
 
-    var thisSheet = ss.getActiveSheet();
+    var thisSheet = hippo;
     var row = START_ROW;
     var hippoDay;
     var monthRange;
@@ -26,8 +25,8 @@ function hltCrMnth() {
     // var startDato = lagDato(START_ROW).split(".");
     // var sluttDato = lagDato(LAST_ROW).split(".");
 
-    const START_DATE = thisSheet.getRange(START_DATE_ROW, START_DATE_COL).getValue();
-    const END_DATE = thisSheet.getRange(END_DATE_ROW, END_DATE_COL).getValue();
+    const START_DATE = thisSheet.getRange(START_DATE_CELL).getValue();
+    const END_DATE = thisSheet.getRange(END_DATE_CELL).getValue();
 
     //Sjekk om vi er i en hippo
     if (START_DATE === "" || END_DATE === "") {
@@ -74,7 +73,7 @@ function hltCrMnth() {
 
 function fiksAlleLenker() {  
     //TODO: for-loop hvor fiksLenke() kalles for alle celler
-    for (var i = 1; i < ANT_RADER; i++) {
+    for (var i = START_ROW; i <= ANT_RADER; i++) {
         fiksLenke(hippo.getRange(i, ARR_COLUMN));
     }        
     SpreadsheetApp.getUi().alert('Alle lenker er oppdatert!');
@@ -138,7 +137,7 @@ function delDato() {
 
 
 function lagHippo() {
-    var thisSheet = ss.getActiveSheet();
+    var thisSheet = ss.insertSheet();
     //   var startDato = new Date();
     //   var sluttDato = new Date(2020, 5, 24);
 
@@ -280,6 +279,10 @@ function mergeMonth(row, monthRow, thisMonth, lastMonth, thisSheet) {
 
 
 function mergeArrs() {
+  
+  if (ss.getActiveSheet() !== hippo) {
+      return;
+  }
 
     response = ui.alert("Bekreft", "Er du sikker på at du vil slå sammen? Kun verdier på den øverste raden vil lagres etter sammenslåingen.", ui.ButtonSet.YES_NO_CANCEL);
     if (response != ui.Button.YES) {
@@ -295,20 +298,27 @@ function mergeArrs() {
     hippo.getRange(startRow, ARR_COLUMN, numRows, NUM_COLS).mergeVertically();
 }
 
-
+// Break apart selected cell and reset formatting. Check also if date column cell on row is merged; delete excess row if true.
 function løsOppMerge(celle) {
-    var thisCell = ss.getActiveCell();
+    var thisCell = ss.getActiveCell(); 
+    var firstRow = thisCell.getRowIndex();
+    var dayCell = hippo.getRange(firstRow, DAY_COLUMN);
 
-    if (!ss.getActiveSheet() === hippo || !thisCell.isPartOfMerge()) {
+    //Return if either wrong sheet or no expected cells merged
+    if ((ss.getActiveSheet() !== hippo) || (!dayCell.isPartOfMerge() && !thisCell.isPartOfMerge())) {
         return;
     }
-
-    var firstRow = thisCell.getRow();
-    var lastRow = thisCell.getMergedRanges()[0].getLastRow();
-    var numRows = lastRow - firstRow + 1;
-    var numCols = 4;
-    var mergeRange = hippo.getRange(firstRow, ARR_COLUMN, numRows, numCols);
-
-    mergeRange.breakApart();
-    mergeRange.setBorder(true, true, true, true, true, true);  
+  
+    if (dayCell.isPartOfMerge()) {
+      ss.deleteRow(firstRow);
+    } 
+  
+    if (thisCell.isPartOfMerge()) {
+      var lastRow = thisCell.getMergedRanges()[0].getLastRow();
+      var numRows = lastRow - firstRow + 1;
+      var numCols = 4;
+      var mergeRange = hippo.getRange(firstRow, ARR_COLUMN, numRows, numCols);
+      mergeRange.breakApart();
+      mergeRange.setBorder(true, true, true, true, true, true);
+    }
 }
