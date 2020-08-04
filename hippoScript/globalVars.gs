@@ -1,3 +1,4 @@
+// Date-relevant
 var monthToNumber = {
     "JANUAR": 1,
     "FEBRUAR": 2,
@@ -43,6 +44,7 @@ const MONDAY = 1;
 const THURSDAY = 4;
 const DAYS_PER_WEEK = 5;
 
+//Colors
 // [lightest, middle, darkest]
 var colors = [
     ["#d9ead3", "#b6d7a8", "#93c47d"], 
@@ -64,7 +66,12 @@ var pr = ss.getSheetByName("PR-plan");
 var hotel = ss.getSheetByName("Hotellbooking");
 var ui = SpreadsheetApp.getUi();
 
-//Mal-celler
+
+//Other
+const CAL_ID = 'g5ac3hoiqkfibq8a53s7s6mdlc@group.calendar.google.com';
+
+
+//Template sheet
 const TMPLT_EV_NAME = "B2";
 const TMPLT_DATE = "A4";
 const TMPLT_VENUE = "B4";
@@ -76,18 +83,21 @@ const TMPLT_RLS_TCKTS = "D14";
 const TMPLT_GRFCS = "F12";
 const TMPLT_HOTEL = "I8";
 
-//PR-ark
+
+//PR sheet
 const PR_GRFCS = "C";
 const PR_FACE = "D";
 const PR_KOMM = "E";
 const PR_BILL = "F";
 
-//Hotellbooking
+
+//Hotel booking sheet
 const H_DATE = "A";
 const H_EVENT = "B";
 const H_STATUS = "C";
 const H_NUM = "D";
 const H_NAMES = "E";
+
 
 //Copy-sheet
 const CP_DATE = "A";
@@ -95,24 +105,26 @@ const CP_EVENT = "B";
 const CP_STRT_DATE_CLL_MAIN = "E4";
 const CP_END_DATE_CLL_MAIN = "E5";
 
+
 //Main sheet (Hovedark/hippo)
-const M_NUM_ROWS = kopi.getRange("E3").getValue();
+const M_NUM_ROWS = copy.getRange("E3").getValue();
 const M_START_ROW = 4;
 const M_NUM_SH_DFLT = 7;
 const M_NUM_COLS = 9;
-const M_START_DATE = thisSheet.getRange(CP_STRT_DATE_CLL_MAIN).getValue();
-const M_END_DATE = thisSheet.getRange(CP_END_DATE_CLL_MAIN).getValue();
+const M_START_DATE = copy.getRange(CP_STRT_DATE_CLL_MAIN).getDisplayValue();
+const M_END_DATE = copy.getRange(CP_END_DATE_CLL_MAIN).getDisplayValue();
 
 const M_MNTH_COL_NUM = 1;
 const M_WEEK_COL_NUM = 2;
 const M_DATE_COL_NUM = 3;
 const M_DAY_COL_NUM = 4;
 const M_EVENT_COL_NUM = 5;
+const M_COMM_COL_NUM = 9;
 
 
 /*
-Old stuff:
-const LAST_ROW_INFO_ROW = 500;
-const LAST_ROW_INFO_COL = 20;
-const LAST_ROW = hippo.getRange(LAST_ROW_INFO_ROW, LAST_ROW_INFO_COL).getValue();
-*/
+   Old stuff:
+   const LAST_ROW_INFO_ROW = 500;
+   const LAST_ROW_INFO_COL = 20;
+   const LAST_ROW = hippo.getRange(LAST_ROW_INFO_ROW, LAST_ROW_INFO_COL).getValue();
+ */
