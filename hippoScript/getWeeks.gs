@@ -1,4 +1,8 @@
-// Returns the ISO week of the date.
+/**
+ * Returns the ISO week of the date.
+ * 
+ * @return {Integer}    From 1
+ */
 Date.prototype.getWeek = function() {
     var date = new Date(this.getTime());
     date.setHours(0, 0, 0, 0);

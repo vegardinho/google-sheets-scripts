@@ -85,10 +85,16 @@ const TMPLT_HOTEL = "I8";
 
 
 //PR sheet
+const PR_DATE = "A";
+const PR_EVENT = "B";
 const PR_GRFCS = "C";
 const PR_FACE = "D";
 const PR_KOMM = "E";
 const PR_BILL = "F";
+const PR_DATE_COL_NUM = 1;
+const PR_GRFCS_COL_NUM = 3;
+const PR_BILL_COL_NUM = 6;
+
 
 
 //Hotel booking sheet
@@ -97,6 +103,10 @@ const H_EVENT = "B";
 const H_STATUS = "C";
 const H_NUM = "D";
 const H_NAMES = "E";
+const H_COMM = "F";
+const H_DATE_COL_NUM = 1;
+const H_STATUS_COL_NUM = 3;
+const H_COMM_COL_NUM = 6;
 
 
 //Copy-sheet
@@ -107,7 +117,7 @@ const CP_END_DATE_CLL_MAIN = "E5";
 
 
 //Main sheet (Hovedark/hippo)
-const M_NUM_ROWS = copy.getRange("E3").getValue();
+var mNumRows = copy.getRange("E3").getValue();
 const M_START_ROW = 4;
 const M_NUM_SH_DFLT = 7;
 const M_NUM_COLS = 9;

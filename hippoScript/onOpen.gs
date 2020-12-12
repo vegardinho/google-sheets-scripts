@@ -1,17 +1,19 @@
 function onOpen() {
-    hltCrMnth();
     ui.createMenu('KU Supermeny')
-        .addItem('Sjekk ark alle arrangmentslenker', 'checkAllLinks')
-        .addItem('Nytt arr på samme dato', 'addDateRow')
+        .addItem('Sjekk alle arrangmentslenker', 'checkAllLinks')
+//        .addItem('Fjern arr på samme dato', 'rmvDateRow')
+//        .addItem('Nytt arr på samme dato', 'addDateRow')
         .addItem('Gå til i dag', 'hltCrMnth')
-        .addItem('Lag nytt hovedark', 'crtMainSht')
-        .addItem('Slå sammen arrangementer', 'mergeEvs')
+//        .addItem('Lag nytt hovedark', 'crtMainSht')
         .addItem('Løs opp sammenslåing', 'undoMerge')
         .addToUi();
 }
 
-
-// Evaluate calendar and current date and highlight current date if in scope
+/**
+ * Evaluate calendar and current date and highlight current date if in scope
+ * 
+ * @return {undefined} 
+ */
 function hltCrMnth() {
     // Date-library months from 0-11
     const TODAY = new Date();
@@ -63,26 +65,39 @@ function hltCrMnth() {
         }
 
         if (dayText === THIS_DATE) {
-            row = i;
             break;
         }
     }
+    row = i;
 
     ss.setActiveSelection(hippo.getRange(row, M_DATE_COL_NUM, 1, 7));
 }  
 
 
-// Run fiksLenke on every event-cell in main sheet
+/**
+ * Run fiksLenke on every event-cell in main sheet
+ * 
+ * @return {undefined} 
+ */
 function checkAllLinks() {  
-    //TODO: for-loop hvor fiksLenke() kalles for alle celler
-    for (var i = M_START_ROW; i <= M_NUM_ROWS; i++) {
-        setEventLink(hippo.getRange(i, M_EVENT_COL_NUM));
-    }        
+    for (var i = M_START_ROW; i <= mNumRows; i++) {
+        var loopCell = hippo.getRange(i, M_EVENT_COL_NUM);
+        Logger.log("Jeg er her");
+        Logger.log(loopCell.getDisplayValue());
+        if (loopCell.isPartOfMerge()) {
+           i = loopCell.getLastRow();
+        }
+        setEventLink(loopCell);
+    }
     ui.alert('Alle lenker er oppdatert!');
 }
 
 
-// Delete all sheets, except first M_NUM_SH_DFLT sheets
+/**
+ * Delete all sheets, except first M_NUM_SH_DFLT sheets
+ * 
+ * @return {undefined} 
+ */
 function dltAllSheets() {  
     var result = ui.alert(
             'Bekreft',
@@ -104,42 +119,140 @@ function dltAllSheets() {
     ui.alert('Alle arrangement-ark slettet');
 }
 
+/**
+ * Removes rows belonging to event of active cell 
+ * 
+ * @return {undefined} 
+ */
+function rmvDateRow() {
+    if (ss.getActiveSheet().getName() != hippo.getName()) {
+        return;
+    }
+  
+    var cell = ss.getActiveCell();
+    var cellRow = cell.getRow();
+    var day = hippo.getRange(cellRow, M_DAY_COL_NUM);
+    var dayIndex = day.getRowIndex();
+    var dayContent;
+    var dateNum = hippo.getRange(cellRow, M_DATE_COL_NUM);
+    var dateNumContent;
+    var numRows = 1;
+    var firstRow = cellRow;
+    var lastRow = cellRow;
+    
+        
+    dayContent = day.getDisplayValue();
+    dateNumContent = dateNum.getDisplayValue();
+    
+    if (cell.isPartOfMerge()) {
+       firstRow = cell.getMergedRanges()[0].getRowIndex();
+       lastRow = cell.getMergedRanges()[0].getLastRow();
+       numRows = (lastRow - firstRow) + 1;
+      //Don't delete if event is all columns. Correct action is to do 'løs opp sammenslåing'
+      if (day.getLastRow() === lastRow && day.getRowIndex() === firstRow) {
+        return;
+      }
+    }  
+    
+    hippo.deleteRows(firstRow, numRows);
+    
+    if (day.isPartOfMerge()) {
+      day = day.getMergedRanges()[0];
+      dateNum = dateNum.getMergedRanges()[0];
+    }
+  
+    console.log(dayContent);
+    day.setValue(dayContent);
+    dateNum.setValue(dateNumContent);
+  
+    moveThings(cellRow + 1, -1);
+ 
+}
 
-// Add additional row beneath selected cell, to allow for more events
-// on one date. Merge appropriate cells after insertion.
+/**
+ * Add additional row beneath selected cell, to allow for more events 
+ * on one date. Merge appropriate cells after insertion.
+ *
+ * @return {undefined} 
+ */
 function addDateRow() {
     if (ss.getActiveSheet().getName() != hippo.getName()) {
         return;
     }
 
-    var firstRow = ss.getActiveCell().getRow();
-    hippo.insertRowAfter(firstRow);
-    removeFormatting(hippo.getRange(firstRow + 1, M_EVENT_COL_NUM), '');
-
-    // Merge rows for columns: day, dateNum, weekday and comments
-    var day = hippo.getRange(firstRow, M_DAY_COL_NUM);
-    var weekStartRow = hippo.getRange(firstRow, M_WEEK_COL_NUM).getMergedRanges()[0].getRowIndex();
-    var weekEndRow = hippo.getRange(firstRow, M_WEEK_COL_NUM).getMergedRanges()[0].getLastRow();
+    var cellRow = ss.getActiveCell().getRow();
+    var firstRow = cellRow;
     var numRows = 2;
-
-    if (day.isPartOfMerge() && (firstRow === lastRow)) {
-
-        firstRow = day.getMergedRanges()[0].getRowIndex();
-        var lastRow = day.getMergedRanges()[0].getLastRow();
-        numRows = (lastRow - firstRow) + 2;
+    var day = hippo.getRange(cellRow, M_DAY_COL_NUM);
+    var lastRow;
+  
+    if (day.isPartOfMerge()) {
+      day = day.getMergedRanges()[0];
+      firstRow = day.getMergedRanges()[0].getRowIndex();
+      lastRow = day.getLastRow();
+      numRows = (lastRow - firstRow) + 2;
     }
-
+  
+    lastRow = day.getLastRow();
+    var weekStartRow = hippo.getRange(cellRow, M_WEEK_COL_NUM).getMergedRanges()[0].getRowIndex();
+    var weekEndRow = hippo.getRange(cellRow, M_WEEK_COL_NUM).getMergedRanges()[0].getLastRow();
+  
+    hippo.insertRowAfter(cellRow);
+    removeFormatting(hippo.getRange(cellRow + 1, M_EVENT_COL_NUM), '');
+  
     hippo.getRange(firstRow, M_DAY_COL_NUM, numRows).mergeVertically();
     hippo.getRange(firstRow, M_DATE_COL_NUM, numRows).mergeVertically();
     hippo.getRange(firstRow, M_COMM_COL_NUM, numRows).mergeVertically();
 
-    if (weekEndRow === firstRow) {
-        var antUkeRad = (weekEndRow - weekStartRow) + 2;
-        hippo.getRange(weekStartRow, 2, antUkeRad).mergeVertically();
+    if (cellRow === weekEndRow) {
+         Logger.log("hoi");
+         numRows = (weekEndRow - weekStartRow) + 2;
+         hippo.getRange(weekStartRow, M_WEEK_COL_NUM, numRows).mergeVertically();
     }
+
+    hippo.getRange(cellRow + 1, M_EVENT_COL_NUM).setBorder(true, true, true, true, true, true);
+    moveThings(cellRow + 1, 1);
+    mNumRows++;
+    copy.getRange("E3").setValue(mNumRows);
 }
 
-// Create main sheet (hippo) from user input dates
+
+/**
+ * Move copy-, pr-, and hotel-ranges down.
+ * 
+ * @param  {Integer}    startRow 
+ * @param  {numMoves}   numMoves 
+ * @return {undefined}          
+ */
+function moveThings(startRow, numMoves) {
+   var startRow = startRow;
+   var formatSrcRow = startRow + 1;
+   var cpRange = copy.getRange(CP_DATE + startRow + ":" + CP_EVENT + 500);
+   var prRange = pr.getRange(PR_GRFCS + startRow + ":" + PR_BILL + 500);
+   var hotRange = hotel.getRange(H_STATUS + startRow + ":" + H_COMM + 500);
+  
+   cpRange.moveTo(cpRange.offset(numMoves, 0));
+   prRange.moveTo(prRange.offset(numMoves,0));
+   hotRange.moveTo(hotRange.offset(numMoves,0));
+  
+  if (numMoves < 0) {
+    return;
+  }
+  
+  pr.getRange(PR_DATE + formatSrcRow + ":" + PR_BILL + formatSrcRow).copyFormatToRange(pr, PR_DATE_COL_NUM, PR_BILL_COL_NUM, startRow, startRow);
+  var srcDV = pr.getRange(formatSrcRow, PR_GRFCS_COL_NUM).getDataValidation();
+  pr.getRange(startRow, PR_GRFCS_COL_NUM).setDataValidation(srcDV);
+  
+  hotel.getRange(H_DATE + formatSrcRow + ":" + H_COMM + formatSrcRow).copyFormatToRange(hotel, H_DATE_COL_NUM, H_COMM_COL_NUM, startRow, startRow);
+  srcDV = hotel.getRange(formatSrcRow, H_STATUS_COL_NUM).getDataValidation();
+  hotel.getRange(startRow, H_STATUS_COL_NUM).setDataValidation(srcDV);
+}
+
+
+/**
+ * Create main sheet (hippo) from user input dates
+ * @return {undefined} 
+ */
 function crtMainSht() {
     var thisSheet = ss.insertSheet();
     thisSheet.clear();
@@ -177,7 +290,12 @@ function crtMainSht() {
     copy.getRange(LAST_ROW_INFO_ROW, LAST_ROW_INFO_COL).setValue(lastRow - 1);
 }
 
-// Define column titles
+
+/**
+ * Define column titles
+ *
+ * @return {undefined} 
+ */
 function setColTitles() {
     var columnNames = ["Mnd", "Uke", "Dato", "Dag", "Arrangement", "Lokale", "Ansvarlig", "På jobb", "Kommentar"];
     for (var i = 0; i < columnNames.length; i++) {
@@ -185,10 +303,15 @@ function setColTitles() {
     }
 }
 
-// Set border style and vertucal alignment on calendar cells
-function setStyle(sheet, rw) {
+/**
+ * Set border style and vertucal alignment on calendar cells
+ * 
+ * @param {Sheet}   sheet  
+ * @param {Integer} endRow 
+ */
+function setStyle(sheet, endRow) {
     var thisSheet = sheet;
-    var row = rw;
+    var row = endRow;
 
     thisSheet.getRange(M_START_ROW, M_MNTH_COL_NUM, (row - M_START_ROW), M_NUM_COLS).setBorder(true, true, true, true, true, true);
     thisSheet.getRange(M_START_ROW - 1, M_MNTH_COL_NUM, 1, M_NUM_COLS).setBorder(true, true, false, true, true, true);
@@ -196,7 +319,13 @@ function setStyle(sheet, rw) {
     thisSheet.getRange(M_START_ROW, M_MNTH_COL_NUM, (row - M_START_ROW), M_NUM_COLS).setVerticalAlignment("middle");
 }
 
-// Define content and colors in cells of calendar
+/**
+ * Define content and colors in cells of calendar
+ * @param  {String} strtDt 
+ * @param  {String} endDt 
+ * @param  {Sheet}  sheet
+ * @return {Integer}        Last row of calendar
+ */
 function createCal(strtDt, endDt, sheet) {
     var thisSheet = sheet;
     var endDate = endDt;
@@ -269,7 +398,12 @@ function createCal(strtDt, endDt, sheet) {
     return row;
 }
 
-// Set main title in main sheet
+/**
+ * Set main title in main sheet
+ * 
+ * @param {String}  strtDt 
+ * @param {Sheet}   sheet 
+ */
 function setTitle(strtDt, sheet) {
     var startDate = strtDt;
     var thisSheet = sheet;
@@ -290,6 +424,13 @@ function setTitle(strtDt, sheet) {
     thisSheet.setFrozenRows(M_START_ROW - 1);
 }
 
+
+/**
+ * Sets style and merges range.
+ * 
+ * @param  {Range}  weekRange 
+ * @return {undefined}           
+ */
 function handleWeek(weekRange) {
     weekRange
         .mergeVertically()
@@ -298,6 +439,13 @@ function handleWeek(weekRange) {
         .setHorizontalAlignment("center")
 }
 
+/**
+ * Formats range according to month specifications.
+ * 
+ * @param {Sheet} thisSheet 
+ * @param {Integer} row      
+ * @param {Integer} thisMonth 
+ */
 function setMonthContent(thisSheet, row, thisMonth) {
     thisSheet.getRange(row, M_MNTH_COL_NUM)
         .setValue(indexToMonth[thisMonth])
@@ -305,6 +453,15 @@ function setMonthContent(thisSheet, row, thisMonth) {
         .setVerticalText(true)
 }
 
+
+/**
+ * Merges cells, and sets format.
+ * 
+ * @param  {Integer} row       
+ * @param  {Integer} monthRow  
+ * @param  {Integer} prevMonth
+ * @return {undefined}         
+ */
 function mergeMonth(row, monthRow, prevMonth) {
     if (monthRow === row) {
         return;
@@ -317,7 +474,11 @@ function mergeMonth(row, monthRow, prevMonth) {
 }
 
 
-// Merge rows for event that continues for several days
+/**
+ * Merges rows for event that continues for several days
+ * 
+ * @return {undefined} 
+ */
 function mergeEvs() {
     if (ss.getActiveSheet().getName() !== hippo.getName()) {
         return;
@@ -343,8 +504,14 @@ function mergeEvs() {
     hippo.getRange(startRow, M_EVENT_COL_NUM, numRows, NUM_COLS).mergeVertically();
 }
 
-// Break apart selected cell and reset formatting. Check also if date column cell on row is merged; delete excess row if true.
-function undoMerge(celle) {
+
+/**
+ * Break apart selected cell and reset formatting. 
+ * Check also if date column cell on row is merged; delete excess row if true.
+ * 
+ * @return {undefined}       
+ */
+function undoMerge() {
     var thisCell = ss.getActiveCell(); 
     var firstRow = thisCell.getRowIndex();
     var dayCell = hippo.getRange(firstRow, M_DAY_COL_NUM);
