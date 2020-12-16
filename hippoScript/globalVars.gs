@@ -56,15 +56,32 @@ const NUM_CLRS_WK = 2;
 const NUM_CLRS_GRP = colors.length;
 
 
+/*** COPY-SHEET ***/
+const CP_DATE = "A";
+const CP_EVENT = "B";
+const CP_LAST_ROW_CELL = "E3";
+const CP_STRT_DATE_CLL_MAIN = "E4";
+const CP_END_DATE_CLL_MAIN = "E5";
+
+const CP_EVENT_COL_NUM = 2;
+const CP_DATE_COL_NUM = 1;
+
+const CP_START_ROW = 4;
+const CP_LAST_ROW = CP_START_ROW + mNumRows;
+
+
 //General variables
 var ss = SpreadsheetApp.getActiveSpreadsheet();
 var sheets = ss.getSheets();
+
 var hippo = ss.getSheetByName("Hovedark");
 var tmplt = ss.getSheetByName("MAL ARR.");
 var copy = ss.getSheetByName("Kopi");
 var pr = ss.getSheetByName("PR-plan");
 var hotel = ss.getSheetByName("Hotellbooking");
+
 var ui = SpreadsheetApp.getUi();
+var mNumRows = copy.getRange(CP_LAST_ROW_CELL).getValue();
 
 
 //Other
@@ -76,49 +93,31 @@ const TMPLT_EV_NAME = "B2";
 const TMPLT_DATE = "A4";
 const TMPLT_VENUE = "B4";
 const TMPLT_RSPNSBLE = "C4";
-const TMPLT_AT_WORK = "J11";
-const TMPLT_COMMENTS = "F16";
-const TMPLT_RLS_FB = "D12";
-const TMPLT_RLS_TCKTS = "D14";
-const TMPLT_GRFCS = "F12";
-const TMPLT_HOTEL = "I8";
+const TMPLT_AT_WORK = "D4";
+const TMPLT_COMMENTS = "D24";
+const TMPLT_HOTEL = "C14";
+const TMPLT_GUESTS = "G11"
+const TMPLT_PHOTOS = "A18";
+const TMPLT_GRFCS = "B18";
+const TMPLT_RLS = "D18";
+const TMPLT_RLS_TCKTS = "E18";
 
 
-//PR sheet
-const PR_DATE = "A";
-const PR_EVENT = "B";
-const PR_GRFCS = "C";
-const PR_FACE = "D";
-const PR_KOMM = "E";
-const PR_BILL = "F";
-const PR_DATE_COL_NUM = 1;
-const PR_GRFCS_COL_NUM = 3;
-const PR_BILL_COL_NUM = 6;
-
-
-
-//Hotel booking sheet
-const H_DATE = "A";
-const H_EVENT = "B";
-const H_STATUS = "C";
-const H_NUM = "D";
-const H_NAMES = "E";
-const H_COMM = "F";
+/*** HOTEL BOOKING SHEET ***/
 const H_DATE_COL_NUM = 1;
+const H_EVENT_COL_NUM = 2;
 const H_STATUS_COL_NUM = 3;
+const H_GUESTS_COL_NUM = 4;
+const H_ROOMS_COL_NUM = 5;
 const H_COMM_COL_NUM = 6;
 
 
-//Copy-sheet
-const CP_DATE = "A";
-const CP_EVENT = "B";
-const CP_STRT_DATE_CLL_MAIN = "E4";
-const CP_END_DATE_CLL_MAIN = "E5";
 
 
 //Main sheet (Hovedark/hippo)
-var mNumRows = copy.getRange("E3").getValue();
 const M_START_ROW = 4;
+const M_LAST_ROW = M_START_ROW + mNumRows;
+
 const M_NUM_SH_DFLT = 7;
 const M_NUM_COLS = 9;
 const M_START_DATE = copy.getRange(CP_STRT_DATE_CLL_MAIN).getDisplayValue();
@@ -129,12 +128,23 @@ const M_WEEK_COL_NUM = 2;
 const M_DATE_COL_NUM = 3;
 const M_DAY_COL_NUM = 4;
 const M_EVENT_COL_NUM = 5;
+const M_VENUE_COL_NUM = 6;
+const M_RSPN_COL_NUM = 7;
+const M_WRKNG_COL_NUM = 8;
 const M_COMM_COL_NUM = 9;
 
 
-/*
-   Old stuff:
-   const LAST_ROW_INFO_ROW = 500;
-   const LAST_ROW_INFO_COL = 20;
-   const LAST_ROW = hippo.getRange(LAST_ROW_INFO_ROW, LAST_ROW_INFO_COL).getValue();
- */
+/*** PR SHEET ***/
+const PR_DATE_COL_NUM = 1;
+const PR_EVENT_COL_NUM = 2;
+const PR_GRFCS_COL_NUM = 3;
+const PR_PHOTOS_COL_NUM = 4;
+const PR_RLS_COL_NUM = 5;
+const PR_TCKTS_COL_NUM = 6;
+const PR_COMM_COL_NUM = 7;
+
+const PR_LAST_COL_NUM = PR_COMM_COL_NUM;
+
+const PR_START_ROW = 4;
+const PR_LAST_ROW = PR_START_ROW + mNumRows;
+

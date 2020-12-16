@@ -12,21 +12,20 @@
  * @return {undefined}      
  */
 function updateCalendarEvent(evName, start, end, prvName, dlt=false) {
-    return;
     var calendar = CalendarApp.getCalendarById(CAL_ID);
     var prvName = prvName;
     var evName = evName;
     var allDayEv = false;
     var events;
-    var startTime = crtDateObj(start);
-    var endTime = crtDateObj(end);
+    var startTime = start;
+    var endTime = end;
   
     // Google Calendar API treats end date as day after event has ended
-    if (start === end) {
+    if (startTime.valueOf() === end.valueOf()) {
         endTime.setDate(endTime.getDate() + 1);
-        Logger.log("hel time!!!");
-        Logger.log(startTime);
-        Logger.log(endTime);
+
+
+
     }
   
   if (prvName !== null) {
@@ -40,9 +39,9 @@ function updateCalendarEvent(evName, start, end, prvName, dlt=false) {
         return;
     }
 
-  Logger.log("Ferdige datoer: ");
-  Logger.log(startTime);
-  Logger.log(endTime);
+
+
+
  
     switch(events.length) {
         default:
@@ -132,22 +131,6 @@ function dltEvMatches(evs, evName, keepOne=false) {
     }
 }
 
-
-
-/**
- * Return Date-object from string on form 'dd.mm'
- * 
- * @param  {String} date    
- * 
- * @return {Date}      
- */
-function crtDateObj(date) {
-    var year = M_END_DATE.substring(0,4);
-    var month = date.substring(3,5);
-    var dateNum = date.substring(0,2);
-    var dateStr = `${year}-${month}-${dateNum}`;
-    return new Date(dateStr);
-}
 
 /* Test-function:
 

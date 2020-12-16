@@ -3,11 +3,11 @@
  *
  * @return {undefined}
  */
-function createSpreadsheetOnChangeTrigger() {
+ function createSpreadsheetOnChangeTrigger() {
     ScriptApp.getProjectTriggers().slice()
-        .forEach (function (d) {
-                if (d.getHandlerFunction() === 'newChange') ScriptApp.deleteTrigger(d);
-                });
+    .forEach (function (d) {
+        if (d.getHandlerFunction() === 'newChange') ScriptApp.deleteTrigger(d);
+    });
 
     ScriptApp.newTrigger('newChange').forSpreadsheet(ss).onChange().create();
 }
@@ -18,7 +18,7 @@ function createSpreadsheetOnChangeTrigger() {
  *
  * @return {undefined} 
  */
-function newChange() {
+ function newChange() {
     if (ss.getActiveSheet().getName() !== hippo.getName()) {
         return;
     }
@@ -26,7 +26,7 @@ function newChange() {
     var thisRange = ss.getActiveRange();
     var firstRow = thisRange.getRow();
     var numRows = thisRange.getNumRows();
-  
+    
     if (numRows > 1 && !thisRange.isPartOfMerge()) {         
         for (var i = 1; i <= numRows; i++) {
             setEventLink(thisRange.getCell(i, 1));
@@ -46,10 +46,10 @@ function newChange() {
  * @param  {String} endDate   
  * @return {undefined}           
  */
-function rstEvVal(cell, name, startDate, endDate) {
+ function rstEvVal(cell, name, startDate, endDate) {
     var start = startDate;
     var end = endDate;
-  
+    
     clearCopyValues(cell.getRow());
     updateCalendarEvent(name, start, end, prvName=null, dlt=true);
     if (cell.getFormula() != "") {
@@ -64,19 +64,19 @@ function rstEvVal(cell, name, startDate, endDate) {
  * @param  {Integer}    lastRow 
  * @return {String[]}               Dates
  */
-function getDates(row, lastRow) {
+ function getDates(row, lastRow) {
     var row = row;
     var lastRow = lastRow;
     var startDate = makeDate(row);
     var endDate;
-  
+    
     if (row === lastRow) {
         endDate = startDate;
     } else {
         endDate = makeDate(lastRow);
     }
-  
-    Logger.log(startDate, endDate);
+    
+
     return [startDate, endDate];
 }
 
@@ -87,10 +87,10 @@ function getDates(row, lastRow) {
  * 
  * @param {Integer}     valgtCelle      Cell with change
  */
-function setEventLink(valgtCelle) {
+ function setEventLink(valgtCelle) {
     var cell = valgtCelle;
     var evName = replaceIllegalChars(cell.getDisplayValue());
-    Logger.log(evName);
+
     var formula = cell.getFormula();
     var txtStyle = cell.getRichTextValue().getTextStyle();
     var col = cell.getColumn();
@@ -101,7 +101,7 @@ function setEventLink(valgtCelle) {
     var prv_nm_frml = prv_nm_cll.getFormula();
     var prv_name = null;
     var sheet, date, sheet, sheetDate, str, response, dstCells, protections, endDate, dates, crtNew;
-  
+    
     //Return if wrong column or both empty and no values previously saved
     if ((cell.getColumn() !== M_EVENT_COL_NUM) || (evName === "" && prv_nm_val === "")) {
         return;
@@ -121,19 +121,19 @@ function setEventLink(valgtCelle) {
         rstEvVal(cell, evName, date, endDate);
         return;
     }
-            
+    
     sheet = getEvSheet(evName);
     if (sheet) {
-       sheetDate = sheet.getRange(TMPLT_DATE).getDisplayValue().substring(1);
+        // Set UTC time
+        sheetDate = new Date(sheet.getRange(TMPLT_DATE).getValue() + "Z");
     }
     // Visually go back to main sheet, so user doesn't see sheet for long
     ss.setActiveSheet(hippo);
     ss.setActiveCell(cell);
-  
-    // Make user confirm new date, if conflicting dates between main sheet and adhering existing sheet 
+        // Make user confirm new date, if conflicting dates between main sheet and adhering existing sheet 
     // Reset if event has duplicate name by error and not by intent (wishing to change date)
-    if (sheet != null && sheetDate != "" && date != sheetDate) {
-        var response = confirmNewDate(evName, sheetDate, date);  
+    if (sheet != null && sheetDate != "Invalid Date" && date.valueOf() != sheetDate.valueOf()) {
+        var response = confirmNewDate(evName, sheetDate.toLocaleDateString(), date.toLocaleDateString());  
         if (response === ui.Button.YES) {
             updateCalendarEvent(evName, sheetDate, sheetDate, prvName=null, dlt=true);
             dltDplctEv(evName, sheetDate);
@@ -142,7 +142,7 @@ function setEventLink(valgtCelle) {
             return;
         }
     }
-  
+    
     //If something existed before the change, clean up if change is deletion; otherwise, ask if change is new name or new event
     if (prv_nm_val != "") {
         if (evName === "") {
@@ -160,13 +160,13 @@ function setEventLink(valgtCelle) {
                 prv_nm_cll.clearContent();
               /*
                 ui.alert('Arrangementet \"' + prv_nm_val + '\" er nå slettet. Dersom du ønsker å bruke regnearket tilknyttet det slettede arrangementet (\"' + prv_nm_val + '\") senere, taster du inn dette navnet for valgt datocelle ' +
-                        'for å gjenopprette arrangementsdataene.');*/
+                'for å gjenopprette arrangementsdataene.');*/
             } else {
                 cell.setFormula(prv_nm_frml);
             }
         }
     }  
- 
+    
     sheet = ss.getSheetByName(evName);
     formula = "=HYPERLINK(\"#gid=" + sheet.getSheetId() + "\";" + "\"" + evName + "\")";
     setLinkStyle(cell, formula);
@@ -174,7 +174,6 @@ function setEventLink(valgtCelle) {
 
     updateCopy(date, formula, cell.getRow());
     protectEvSheet(sheet, dstCells);
-    Logger.log(prv_name);
     updateCalendarEvent(evName, date, endDate, prv_name, dlt=false);
 }
 
@@ -192,37 +191,30 @@ function setSheetLink(cell, formula) {
  *
  * @return {String}          The text with breaking characters removed
  */
-function replaceIllegalChars(stroing) {
-  Logger.log("hei");
+ function replaceIllegalChars(stroing) {
+
   var streng = "";
   var changed = false;
-    var rmvChars = ['\'', '"'];
-    var rplcmntChars = ['´', '´'];
-          Logger.log(streng);
+  var rmvChars = ['\'', '"'];
+  var rplcmntChars = ['´', '´'];
 
-        
-    for (var i = 0; i < stroing.length; i++) {
-      Logger.log("i = " + i);
+
+  
+  for (var i = 0; i < stroing.length; i++) {
       for (var l = 0; l < rmvChars.length; l++) {
-        Logger.log("l = " + l);
-        Logger.log(stroing[i]);
-        Logger.log(rmvChars[l]);
-        Logger.log(rplcmntChars[l]);
-       if (stroing[i] == rmvChars[l]) {
-         streng += rplcmntChars[l];
-         changed = true;
-         break;
+         if (stroing[i] == rmvChars[l]) {
+           streng += rplcmntChars[l];
+           changed = true;
+           break;
        }
-       }
-      if (!changed) {
-              streng += stroing[i];
-      }
-      changed = false;
-      }
-  
-  Logger.log(streng);
-  
-    return streng;
+   }
+   if (!changed) {
+      streng += stroing[i];
+  }
+  changed = false;
+}
+
+return streng;
 }
 
 /**
@@ -231,14 +223,13 @@ function replaceIllegalChars(stroing) {
  * @param  {String} date      
  * @return {String}          Response from user
  */
-function confirmNewDate(evName, sheetDate, date) {
+ function confirmNewDate(evName, sheetDate, date) {
     var evName = evName;
     var sheetDate = sheetDate;
     var date = date;
 
     str = "Det ser ut som arrangementsarket med navnet \'" + evName + "\' står registrert med datoen " + sheetDate + ". " +
-        "Ønsker du å endre datoen på dette arket fra " + sheetDate + " til " + date + "? Hvis du har flere arrangementer med samme navn, bør du " +
-        "slå sammen cellene vertikalt for å samle i ett ark, eller endre navnet på ett av dem for å få to forskjellige arrangementsark (f.eks \'" + evName + " 2" + "\')";
+    "Ønsker du å endre datoen på dette arket fra " + sheetDate + " til " + date + "?";
     return  ui.alert("Bekreft ny dato", str, ui.ButtonSet.YES_NO_CANCEL);
 
 }
@@ -251,7 +242,7 @@ function confirmNewDate(evName, sheetDate, date) {
  * @param  {String} newName    
  * @return {undefined}            [description]
  */
-function chngNameOfEv(prv_nm_val, newName) {
+ function chngNameOfEv(prv_nm_val, newName) {
     var arv_nm_val = arv_nm_val;
     var evName = newName;
     var exstSheet = ss.getSheetByName(newName);
@@ -281,7 +272,7 @@ function chngNameOfEv(prv_nm_val, newName) {
  * @param  {Integer}    endDate    
  * @return {undefined}            
  */
-function dltEvent(column, row, cell, prv_nm_cll, prv_nm_val, evName, date, endDate) {
+ function dltEvent(column, row, cell, prv_nm_cll, prv_nm_val, evName, date, endDate) {
     var col = column;
     var row = row;
     var cell = cell;
@@ -296,15 +287,12 @@ function dltEvent(column, row, cell, prv_nm_cll, prv_nm_val, evName, date, endDa
             'Bekreft sletting',
             'Er du sikker på at du vil slette arrangementet \"' + prv_nm_val + '\"?',
             ui.ButtonSet.YES_NO);
-    if (result === ui.Button.YES) {*/
-  
-        clearCopyValues(row);
-        
-        // Delete the four columns containing information about event
-        hippo.getRange(row, col+1, 1, 3).clearContent();
-        resetCellValue(cell, "");
+            if (result === ui.Button.YES) {*/
+              
+                clearCopyValues(row);
+                resetCellValue(cell, "");
 
-        updateCalendarEvent(evName, date, endDate, prvName=null, dlt=true); 
+                updateCalendarEvent(evName, date, endDate, prvName=null, dlt=true); 
   /*
     } else {
         cell.setFormula(prv_nm_cll.getFormula());
@@ -318,15 +306,23 @@ function dltEvent(column, row, cell, prv_nm_cll, prv_nm_val, evName, date, endDa
  * @param  {Range[]}    dstClls 
  * @return {undefined}         
  */
-function protectEvSheet(sht, dstClls) {
+ function protectEvSheet(sht, dstClls) {
     var sheet = sht;
     var dstCells = dstClls;
+    var protections, length;
+    var rangeLength = dstCells.length;
     // Protect linked cells in event sheet. 
-    // Some cells are concatenated, as adding protection seems to add a lot of overhead (processing time during script run)
+    // Some cells are concatenated, as adding protection seems to add a lot of overhead
     protections = sheet.getProtections(SpreadsheetApp.ProtectionType.RANGE);
-    if (protections.length < dstCells.lenght) {
-        for (let i = 0; i < dstCells.length; i++) {
-            protectRange(dstCells[i]) 
+    if (protections == null) {
+        length = 0;
+    } else {
+        length = protections.length;
+    }
+
+    if (length < rangeLength) {
+        for (let i = 0; i < 6; i++) {
+            protectRange(dstCells[i]);
         }
     }
 }
@@ -336,8 +332,8 @@ function protectEvSheet(sht, dstClls) {
  * @param {Range}   cell    
  * @param {String}  formula 
  */
-function setLinkStyle(cell, formula) {
-    Logger.log("setter lenke");
+ function setLinkStyle(cell, formula) {
+
     cell.setFormula(formula);
     cell.setFontLine('none');
     cell.setFontColor("black");
@@ -351,40 +347,47 @@ function setLinkStyle(cell, formula) {
  * @param  {Integer} row    
  * @return {undefined}       
  */
-function updateCopy(date, formula, row) {
-    copy.getRange(CP_DATE + row).setValue(date);
+ function updateCopy(date, formula, row) {
+    copy.getRange(CP_DATE + row).setValue(date.toLocaleDateString());
     copy.getRange(CP_EVENT + row).setFormula(formula);
 }
 
 /**
- * Set values in event sheet, either by linkink or hardcoding.
+ * Sets values in event sheet, either by linkink or hardcoding.
  * 
  * @param {Range}   ev_nm_cll   Event cell
  * @param {Sheet}   sht       
  * @param {String}  evName    
  * @param {String}  date      
  */
-function setSheetValues(ev_nm_cll, sht, evName, date) {
+ function setSheetValues(ev_nm_cll, sht, evName, date) {
     var sheet = sht;
     var row = ev_nm_cll.getRow();
     var col = ev_nm_cll.getColumn();
     var ev_name = evName;
-    var ev_date = date;
+    var ev_date = date.toLocaleDateString();
+    var name_range = sheet.getRange(TMPLT_EV_NAME);
+    var date_range = sheet.getRange(TMPLT_DATE);
 
-    var src = [ev_nm_cll, hippo.getRange(row, col-2), hippo.getRange(row, col+1), hippo.getRange(row, col+2), 
-        hippo.getRange(row, col+3), hippo.getRange(row, col+4), pr.getRange(PR_FACE + row), pr.getRange(PR_BILL + row), 
-        pr.getRange(PR_GRFCS + row), hotel.getRange(H_STATUS + row)];  
+    var src = [hippo.getRange(row, M_VENUE_COL_NUM), hippo.getRange(row, M_RSPN_COL_NUM), 
+    hippo.getRange(row, M_WRKNG_COL_NUM), hippo.getRange(row, M_COMM_COL_NUM)];
 
-    var dst = [sheet.getRange(TMPLT_EV_NAME), sheet.getRange(TMPLT_DATE), sheet.getRange(TMPLT_VENUE), sheet.getRange(TMPLT_RSPNSBLE), 
-        sheet.getRange(TMPLT_AT_WORK), sheet.getRange(TMPLT_COMMENTS), sheet.getRange(TMPLT_RLS_FB), sheet.getRange(TMPLT_RLS_TCKTS),
-        sheet.getRange(TMPLT_GRFCS), sheet.getRange(TMPLT_HOTEL)];
+    var dst = [sheet.getRange(TMPLT_VENUE), sheet.getRange(TMPLT_RSPNSBLE), 
+    sheet.getRange(TMPLT_AT_WORK), sheet.getRange(TMPLT_COMMENTS)];
 
     // Event name and date not linked, but hardcoded. Runs on every change, so not an issue.
-    dst[0].setValue(ev_name);
-    dst[1].setValue(ev_date);
+    name_range.setValue(ev_name);
+    date_range.setValue(ev_date);
 
-    for (var i = 2; i < dst.length; i++) {
-        dst[i].setFormula(Utilities.formatString('=\'%s\'!%s', src[i].getSheet().getName(), src[i].getA1Notation()));
+    linkNatively(dst, src);
+    return [name_range, date_range].concat(dst);
+}
+
+
+function linkNatively(dst, src) {
+    for (var i = 0; i < dst.length; i++) {
+        dst[i].setFormula(Utilities.formatString('=\'%s\'!$%s$%s', src[i].getSheet().getName(), 
+            src[i].getA1Notation()[0], src[i].getRow()));
     };
 }
 
@@ -395,7 +398,7 @@ function setSheetValues(ev_nm_cll, sht, evName, date) {
  * @param  {String} evName
  * @return {Sheet}      
  */
-function getEvSheet(evName) {
+ function getEvSheet(evName) {
     var sheet = ss.getSheetByName(evName);
 
     // Create new sheet if non-existent
@@ -413,7 +416,7 @@ function getEvSheet(evName) {
  * @param  {String} delDate     Date of event to be deleted
  * @return {undefined}         
  */
-function dltDplctEv(name, delDate) {
+ function dltDplctEv(name, delDate) {
     for (var i = M_START_ROW; i <= mNumRows; i++) {
         let cell = copy.getRange(CP_EVENT + i).getDisplayValue();
         let date = copy.getRange(CP_DATE + i).getDisplayValue().substring(1);
@@ -421,9 +424,6 @@ function dltDplctEv(name, delDate) {
         let hippoName = hippoCell.getDisplayValue();
 
         if (cell === name && date === delDate) {
-            console.log(cell);
-            console.log(date);
-            console.log(hippoName);
             clearCopyValues(i);
             if (hippoName === name) {
                 resetCellValue(hippoCell, "");
@@ -440,7 +440,7 @@ function dltDplctEv(name, delDate) {
  * @param  {Integer} row 
  * @return {undefined}     
  */
-function clearCopyValues(row) {
+ function clearCopyValues(row) {
     copy.getRange(CP_EVENT + row).clearContent();
     copy.getRange(CP_DATE + row).clearContent();
 }
@@ -453,7 +453,7 @@ function clearCopyValues(row) {
  * @param  {String} name    New value of cell
  * @return {undefined}      
  */
-function resetCellValue(cell, name) {
+ function resetCellValue(cell, name) {
     cell.setFontWeight("normal");
     cell.setValue(name);
 }
@@ -465,7 +465,7 @@ function resetCellValue(cell, name) {
  * @param  {Range} rng 
  * @return {undefined}   
  */
-function protectRange(rng) {
+ function protectRange(rng) {
     var range = rng
     var me = copy.getProtections(SpreadsheetApp.ProtectionType.SHEET)[0].getEditors()[0];
     var protection = range.protect().setDescription('Ny beskyttelse');
@@ -484,10 +484,12 @@ function protectRange(rng) {
  * @param  {Integer}    row     Row in main sheet
  * @return {String}             Formatted date string
  */
-function makeDate(row) {
+ function makeDate(row) {
     var col = M_EVENT_COL_NUM;
-    var mnth = monthToNumber[hippo.getRange(row, M_MNTH_COL_NUM).getMergedRanges()[0].getDisplayValue()].toString();
+    var month = monthToNumber[hippo.getRange(row, M_MNTH_COL_NUM).getMergedRanges()[0].getDisplayValue()].toString();
     var dateNum = hippo.getRange(row, col-2);
+    var year = M_END_DATE.substring(0,4);
+    var str;
 
     if (dateNum.isPartOfMerge()) {
         dateNum = dateNum.getMergedRanges()[0].getDisplayValue();
@@ -495,13 +497,8 @@ function makeDate(row) {
         dateNum = dateNum.getDisplayValue();
     }
 
-    if (dateNum.length === 1) {
-        dateNum = 0 + dateNum;
-    }
+    // Return date object in UTC
+    str = `${year}-${month}-${dateNum}Z`;
 
-    if (mnth.length === 1) {
-        mnth = "0" + mnth;
-    }
-    Logger.log(dateNum + "." + mnth);
-    return dateNum + "." + mnth;
+    return new Date(str);
 }
