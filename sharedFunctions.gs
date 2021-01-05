@@ -23,7 +23,7 @@ function checkIfNewEvents(newEventAction, srcSheet, dstSheet, DST_FIRST_ROW, DST
         SRC_DATE_COL_NUM, MAX_CHECKS) {
     var dstSheetRow = DST_FIRST_ROW;
     var srcRow = SRC_FIRST_ROW;
-  
+
     // Run while not reached defined end in source sheet, or defined limit in destination sheet
     while ((srcRow <= SRC_LAST_ROW) && (dstSheetRow <= DST_LAST_ROW)) {
         srcRow = findNextEvent(srcRow, dstSheetRow, newEventAction, srcSheet, dstSheet, 
@@ -62,7 +62,8 @@ function findNextEvent(srcRow, dstSheetRow, newEventAction, srcSheet, dstSheet,
             DST_DATE_COL_NUM, SRC_FIRST_ROW, SRC_LAST_ROW, SRC_EVENT_COL_NUM, SRC_DATE_COL_NUM, MAX_CHECKS) {
     var srcRow = srcRow;
     var incrRows = -1;
-    var src, dst;
+    var to, from;
+
 
     while ((incrRows == -1) && (srcRow <= SRC_LAST_ROW)) {
                 incrRows = findEventCells(srcRow, dstSheetRow, dstSheet, srcSheet, MAX_CHECKS, 
@@ -126,27 +127,66 @@ function findEventCells(srcRow, dstRow, dstSheet, srcSheet, MAX_CHECKS, SRC_EVEN
     var srcRow = srcRow;
     var srcEventCell = srcSheet.getRange(srcRow, SRC_EVENT_COL_NUM);
     var srcDate = new Date(srcSheet.getRange(srcRow, SRC_DATE_COL_NUM).getValue() + "Z");
-    var dstEventCell, dstDate;
+    var dstEventCell, dstDate, dstEventCellVal, srcEventCellVal;
         
     for (var i = 0; i < MAX_CHECKS; i++) {
         dstEventCell = dstSheet.getRange(dstSheetRow + i, DST_EVENT_COL_NUM);
         dstDate = new Date(dstSheet.getRange(dstSheetRow + i, DST_DATE_COL_NUM).getValue() + "Z");
+        dstEventCellVal = dstEventCell.getDisplayValue();
+        srcEventCellVal = srcEventCell.getDisplayValue();
         
         // No event in row-cell in source sheet
         if (srcEventCell.isBlank()) {
             return -1;
         }
         // No point in iterating anymore, as no more events filled out in destination sheet;
-        // or content i @srcSheet has moved down, so date cell link to @dstSheet must be updated.
+        // or content in @srcSheet has moved down, so date cell link to @dstSheet must be updated.
         if ((dstEventCell.isBlank() && i === 0) || 
-            (dstDate.valueOf() != srcDate.valueOf() && dstEventCell.getDisplayValue() == srcEventCell.getDisplayValue())) {
+            ((dstEventCellVal == srcEventCellVal) && (dstDate.valueOf() != srcDate.valueOf() || 
+            dstEventCell.getFormula() === "" || dstSheet.getRange(dstRow, DST_EVENT_COL_NUM + 1).getValue() == "#REF!"))) {
             return -2;
         }
         // Event already added to destination sheet, or ran out of legal rows in destination sheet
-        if (dstEventCell.getDisplayValue() == srcEventCell.getDisplayValue() || dstRow + i > DST_LAST_ROW) {
+        if (dstEventCellVal == srcEventCellVal || dstRow + i > DST_LAST_ROW) {
             return i;
         }
     }
 
     return -3;
 }
+
+
+
+/**
+ * Checks if reference of cells in @range is faulty, and attempts to reset the same formula
+ * 
+ * @param  {Range} range 
+ * @return {undefined}       
+ */
+function fixCellErrors(range) {
+    var range = range;
+    var sheet = range.getSheet();
+    var ss = sheet.getParent();
+
+    var firstRow = range.getRow();
+    var lastRow = range.getLastRow();
+    var firstCol = range.getColumn();
+    var lastCol = range.getLastColumn();
+
+    var cell, formula;
+            
+    for (let i = firstRow; i < lastRow + 1; i++) {
+        for (let l = firstCol; l < lastCol + 1; l++) {
+            cell = sheet.getRange(i, l);
+            formula = cell.getFormula();
+            if (cell.getValue() == "#REF!") {
+                cell.setFormula(formula);
+            }
+        }
+    }
+}
+
+
+
+
+
