@@ -15,34 +15,32 @@ function updateCalendarEvent(evName, start, end, prvName, dlt=false) {
     var calendar = CalendarApp.getCalendarById(CAL_ID);
     var prvName = prvName;
     var evName = evName;
-    var allDayEv = false;
     var events;
     var startTime = start;
     var endTime = end;
-  
+
+    console.log(evName);
+    console.log(startTime.getDate());
+    console.log(endTime.getDate());
     // Google Calendar API treats end date as day after event has ended
     if (startTime.valueOf() === end.valueOf()) {
+        startTime = new Date(startTime.valueOf())
         endTime.setDate(endTime.getDate() + 1);
-
-
-
     }
-  
-  if (prvName !== null) {
-    events = calendar.getEventsForDay(startTime, {search: prvName});
-  } else {
-    events = calendar.getEventsForDay(startTime, {search: evName});
-  }    
+    console.log(startTime.getDate());
+    console.log(endTime.getDate());
+
+    if (prvName !== null) {
+        events = calendar.getEventsForDay(startTime, {search: prvName});
+    } else {
+        events = calendar.getEventsForDay(startTime, {search: evName});
+    }    
 
     if (dlt) {
         dltEvMatches(events, evName);
         return;
     }
 
-
-
-
- 
     switch(events.length) {
         default:
             dltEvMatches(events, evName, keepOne=true);

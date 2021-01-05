@@ -1,12 +1,12 @@
 function onOpen() {
         ui.createMenu('KU Supermeny')
         .addItem('Sjekk alle arrangmentslenker', 'checkAllLinks')
+    .addItem('Oppdater PR/Hotell', 'updateSheet')
     //.addItem('Fjern arr på samme dato', 'rmvDateRow')
     //.addItem('Legg til ny rad', 'addDateRow')
     .addItem('Gå til i dag', 'hltCrMnth')
     .addItem('Lag nytt hovedark', 'crtMainSht')
     //.addItem('Løs opp sammenslåing', 'undoMerge')
-    .addItem('Oppdater PR/Hotell', 'updateSheet')
     .addToUi();
 }
 
@@ -547,15 +547,17 @@ function undoMerge() {
 function updateSheet() {
     var thisSheet = ss.getActiveSheet();
 
-    console.log(thisSheet.getName());
-    console.log(hotel.getName());
-    if (thisSheet.getName() != pr.getName() && thisSheet.getName() != hotel.getName()) {
-        ui.alert("Vennligst velg PR- eller Hotell-arket før du forsøker å oppdatere.");
-    } else {
+    if (thisSheet.getName() == pr.getName()) {
         SharedFunctions.checkIfNewEvents(addEventToPrHotel, copy, thisSheet, PR_START_ROW, PR_LAST_ROW, PR_DATE_COL_NUM,
-            PR_LAST_COL_NUM, PR_EVENT_COL_NUM, CP_START_ROW, CP_LAST_ROW, CP_EVENT_COL_NUM, 4); 
-
+            PR_LAST_COL_NUM, PR_EVENT_COL_NUM, PR_DATE_COL_NUM, CP_START_ROW, CP_LAST_ROW, CP_EVENT_COL_NUM, CP_DATE_COL_NUM, 4); 
+    } else if (thisSheet.getName() == hotel.getName()) {
+        SharedFunctions.checkIfNewEvents(addEventToPrHotel, copy, thisSheet, H_START_ROW, H_LAST_ROW, H_DATE_COL_NUM,
+            H_LAST_COL_NUM, H_EVENT_COL_NUM, H_DATE_COL_NUM, CP_START_ROW, CP_LAST_ROW, CP_EVENT_COL_NUM, CP_DATE_COL_NUM, 4); 
+    } else {
+        ui.alert("Vennligst velg PR- eller Hotell-arket før du forsøker å oppdatere.");
     }
+
+    fixPRHotelCells();
 }
 
 
@@ -567,10 +569,19 @@ function updateSheet() {
  */
 function addEventToPrHotel(sheetRow, copyRow, dstSheet) {
     var evName = copy.getRange(copyRow, CP_EVENT_COL_NUM).getDisplayValue();
-    var evFormula = copy.getRange(copyRow, CP_EVENT_COL_NUM).getFormula();
+    var copyCell = copy.getRange(copyRow, CP_EVENT_COL_NUM);
     var evSheet = ss.getSheetByName(evName);
     var evDate = copy.getRange(copyRow, CP_DATE_COL_NUM).getValue();
-    var dstEventColNum, dstDateColNum;
+    var dstEventColNum, dstDateColNum, evFormula;
+
+    if (evSheet == null) {
+        evSheet = getEvSheet(evName);
+        ss.setActiveSheet(dstSheet);
+        setUpNewSheet(evSheet, evName, hippo.getRange(copyRow, M_EVENT_COL_NUM), evDate);
+    }
+
+    ss.setActiveSheet(dstSheet);
+    evFormula = copyCell.getFormula();
 
     if (dstSheet.getName() == pr.getName()) {
         dstEventColNum = PR_EVENT_COL_NUM;
@@ -593,6 +604,30 @@ function addEventToPrHotel(sheetRow, copyRow, dstSheet) {
 
     linkNatively(dst, src);
 }
+
+
+/**
+ * Calls @SharedFunction.fixCellErrors for either Hotel or PR sheet
+ * 
+ * @return {undefined} 
+ */
+/*function fixPRHotelCells() {
+    var thisSheet = ss.getActiveSheet();
+
+    if (thisSheet.getName() == pr.getName()) {
+        SharedFunctions.fixCellErrors(pr.getRange(PR_START_ROW, PR_GRFCS_COL_NUM, mNumRows, (PR_TCKTS_COL_NUM - PR_GRFCS_COL_NUM + 1)));
+    } else if (thisSheet.getName() == hotel.getName()) {
+        SharedFunctions.fixCellErrors(hotel.getRange(H_START_ROW, H_STATUS_COL_NUM, mNumRows, (H_GUESTS_COL_NUM - H_STATUS_COL_NUM + 1)));
+    } else {
+        ui.alert("Vennligst velg PR- eller Hotell-arket før du forsøker å oppdatere.");
+    }   
+}*/
+
+
+
+
+
+
 
 
 

@@ -56,21 +56,7 @@ const NUM_CLRS_WK = 2;
 const NUM_CLRS_GRP = colors.length;
 
 
-/*** COPY-SHEET ***/
-const CP_DATE = "A";
-const CP_EVENT = "B";
-const CP_LAST_ROW_CELL = "E3";
-const CP_STRT_DATE_CLL_MAIN = "E4";
-const CP_END_DATE_CLL_MAIN = "E5";
-
-const CP_EVENT_COL_NUM = 2;
-const CP_DATE_COL_NUM = 1;
-
-const CP_START_ROW = 4;
-const CP_LAST_ROW = CP_START_ROW + mNumRows;
-
-
-//General variables
+/*** General variables ***/
 var ss = SpreadsheetApp.getActiveSpreadsheet();
 var sheets = ss.getSheets();
 
@@ -81,7 +67,21 @@ var pr = ss.getSheetByName("PR-plan");
 var hotel = ss.getSheetByName("Hotellbooking");
 
 var ui = SpreadsheetApp.getUi();
+const CP_LAST_ROW_CELL = "E3";
 var mNumRows = copy.getRange(CP_LAST_ROW_CELL).getValue();
+
+
+/*** COPY-SHEET ***/
+const CP_DATE = "A";
+const CP_EVENT = "B";
+const CP_STRT_DATE_CLL_MAIN = "E4";
+const CP_END_DATE_CLL_MAIN = "E5";
+
+const CP_EVENT_COL_NUM = 2;
+const CP_DATE_COL_NUM = 1;
+
+const CP_START_ROW = 4;
+const CP_LAST_ROW = CP_START_ROW + mNumRows;
 
 
 //Other
@@ -110,6 +110,11 @@ const H_STATUS_COL_NUM = 3;
 const H_GUESTS_COL_NUM = 4;
 const H_ROOMS_COL_NUM = 5;
 const H_COMM_COL_NUM = 6;
+
+const H_START_ROW = 4;
+const H_LAST_ROW = H_START_ROW + mNumRows;
+const H_LAST_COL_NUM = H_COMM_COL_NUM;
+
 
 
 
