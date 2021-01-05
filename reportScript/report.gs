@@ -6,7 +6,7 @@ function onOpen() {
     ui.createMenu('KU Supermeny')
     .addItem('Oppdater arrangementsliste fra Hippo', 'checkIfNewEvents')
     .addItem('Nullstill rapporteringsdokumentet', 'setUpAsNew')
-    .addItem('Fiks arrangement', 'fixEventOnRow')
+    //.addItem('Fiks rad', 'fixEventOnRow')
     .addToUi();
     checkHippoLink();
 }
@@ -146,15 +146,14 @@ function deleteSheets(blockPrompt) {
  * @return {Null}
  */
 function fixEventOnRow(mainSheetRow, hippoCopyRow) {
-    var response = ui.prompt('Hvilket arrangementsnummer er det snakk om?');
-    var eventNum = Number(response.getResponseText());
-    var hippoSheetRow, eventName, mainSheetRow;
+    var response = ui.prompt('Hvilken rad vil du fikse?');
+    var mainSheetRow = Number(response.getResponseText());
+    var hippoSheetRow, eventName;
 
-    if (response.getSelectedButton() != ui.Button.OK || eventNum == NaN) {
+    if (response.getSelectedButton() != ui.Button.OK || mainSheetRow == NaN) {
         return;
     }
 
-    mainSheetRow = eventNum + 3;
     eventName = mainSheet.getRange(mainSheetRow, M_EVENT_COL_NUM).getDisplayValue();
 
     for (let i = 1; i < HC_LAST_HIP_ROW; i++) {
@@ -261,7 +260,7 @@ function setUpEventSheet(mainSheetRow, hippoCopyRow, dstSheet=null) {
 /** 
  * Protect range, then remove all other users from the list of editors.
  * Ensure the current user is an editor before removing others. Otherwise, if the user's edit
- * permission comes from a group, the script throws an exception upon removing the group.
+ * permission comes from a group, the script throws an exception upon removing the group.  
  * @param   {Sheet}      eventSheet     Sheet to have its areas protected
  * @return  {undefined}
  */
@@ -355,7 +354,7 @@ function beskyttOmråde(protectRange, eventSheet) {
     var sheet = eventSheet;
     var range = protectRange;
 
-    var me = mainSheet.getProtections(SpreadsheetApp.ProtectionType.SHEET)[0].getEditors()[0];  
+    var me = template.getProtections(SpreadsheetApp.ProtectionType.SHEET)[0].getEditors()[0];  
     var protection = sheet.getRange(range).protect().setDescription('Ny beskyttelse');
     // Make sure admin is only editor
     protection.addEditor(me);
@@ -371,5 +370,17 @@ function beskyttOmråde(protectRange, eventSheet) {
 function checkIfNewEvents() {
     SharedFunctions.checkIfNewEvents(setUpEventSheet, hippoCopy, mainSheet, M_FIRST_RAP_ROW, M_LAST_RAP_ROW, M_DATE_COL_NUM,
         M_LAST_COL_NUM, M_EVENT_COL_NUM, M_DATE_COL_NUM, HC_FIRST_HIP_ROW, HC_LAST_HIP_ROW, HC_EVENT_COL_NUM, HC_DATE_COL_NUM, 4); 
+
+/*    var numRows = M_LAST_RAP_ROW - M_FIRST_RAP_ROW;
+    SharedFunctions.fixCellErrors(mainSheet.getRange(M_FIRST_RAP_ROW, M_DATE_COL_NUM, numRows));
+
+    var firstCol = M_FILM_COL_NUM;
+    var firstCol = M_FILM_COL_NUM;
+    var numCols = M_INCOME_COL_NUM - M_FILM_COL_NUM;
+    SharedFunctions.fixCellErrors(mainSheet.getRange(M_FIRST_RAP_ROW, firstCol, numRows, numCols));*/
 }
 
+
+function test() {
+  console.log(mainSheet.getRange("D4").getFormula());
+}
